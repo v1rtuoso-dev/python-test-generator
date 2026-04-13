@@ -1,0 +1,44 @@
+package {{ component.package }};
+
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.http.MediaType;
+
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+
+// Inferred Imports
+{% for imp in imports %}
+import {{ imp }};
+{% endfor %}
+
+@WebMvcTest({{ component.name }}.class)
+class {{ component.name }}Test {
+
+    @Autowired
+    private MockMvc mockMvc;
+
+    {% for dep in component.dependencies %}
+    @MockBean
+    private {{ dep.type }} {{ dep.name }};
+    {% endfor %}
+
+    {% for method in component.methods %}
+    @Test
+    void {{ method.name }}_test() throws Exception {
+        // Arrange
+        {% for arg in method.args %}
+        {{ arg.type }} {{ arg.name }} = null; // TODO: Initialize mock data
+        {% endfor %}
+        
+        // Act & Assert
+        // TODO: perform mockMvc request and expectations
+        {{ method.name }}_ai_stub();
+    }
+    {% endfor %}
+}

@@ -1,0 +1,32 @@
+package {{ component.package }};
+
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import static org.assertj.core.api.Assertions.assertThat;
+
+// Inferred Imports
+{% for imp in imports %}
+import {{ imp }};
+{% endfor %}
+
+@DataJpaTest
+class {{ component.name }}Test {
+
+    @Autowired
+    private {{ component.name }} {{ component.name[:1]|lower ~ component.name[1:] }};
+
+    {% for method in component.methods %}
+    @Test
+    void {{ method.name }}_test() {
+        // Arrange
+        {% for arg in method.args %}
+        {{ arg.type }} {{ arg.name }} = null; // TODO: Initialize test data
+        {% endfor %}
+        
+        // Act & Assert
+        // TODO: test custom repository logic
+        {{ method.name }}_ai_stub();
+    }
+    {% endfor %}
+}

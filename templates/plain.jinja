@@ -1,0 +1,28 @@
+package {{ component.package }};
+
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
+
+// Inferred Imports
+{% for imp in imports %}
+import {{ imp }};
+{% endfor %}
+
+class {{ component.name }}Test {
+
+    private {{ component.name }} {{ component.name[:1]|lower ~ component.name[1:] }} = new {{ component.name }}();
+
+    {% for method in component.methods %}
+    @Test
+    void {{ method.name }}_test() {
+        // Arrange
+        {% for arg in method.args %}
+        {{ arg.type }} {{ arg.name }} = null; // TODO: Initialize basic data
+        {% endfor %}
+        
+        // Act & Assert
+        // TODO: Implement plain unit test logic
+        {{ method.name }}_ai_stub();
+    }
+    {% endfor %}
+}

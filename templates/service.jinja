@@ -1,0 +1,47 @@
+package {{ component.package }};
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import org.mockito.junit.jupiter.MockitoExtension;
+import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+// Inferred Imports
+{% for imp in imports %}
+import {{ imp }};
+{% endfor %}
+
+@ExtendWith(MockitoExtension.class)
+class {{ component.name }}Test {
+
+    {% for dep in component.dependencies %}
+    @Mock
+    private {{ dep.type }} {{ dep.name }};
+    {% endfor %}
+
+    @InjectMocks
+    private {{ component.name }} {{ component.name[:1]|lower ~ component.name[1:] }};
+
+    @BeforeEach
+    void setUp() {
+        MockitoAnnotations.openMocks(this);
+    }
+
+    {% for method in component.methods %}
+    @Test
+    void {{ method.name }}_test() {
+        // Arrange
+        {% for arg in method.args %}
+        {{ arg.type }} {{ arg.name }} = null; // TODO: Initialize mock data
+        {% endfor %}
+
+        // Act & Assert
+        // TODO: Implement test logic for {{ method.name }}
+        {{ method.name }}_ai_stub();
+    }
+    {% endfor %}
+}

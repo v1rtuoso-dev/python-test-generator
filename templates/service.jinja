@@ -5,10 +5,13 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
 import org.mockito.junit.jupiter.MockitoExtension;
 import static org.mockito.Mockito.*;
+import static org.mockito.ArgumentMatchers.*;
 import static org.junit.jupiter.api.Assertions.*;
+{% if use_assertj %}
+import static org.assertj.core.api.Assertions.assertThat;
+{% endif %}
 
 // Inferred Imports
 {% for imp in imports %}
@@ -24,24 +27,43 @@ class {{ component.name }}Test {
     {% endfor %}
 
     @InjectMocks
-    private {{ component.name }} {{ component.name[:1]|lower ~ component.name[1:] }};
+    private {{ component.name }} {{ sut_var }};
+    {% if ctor_fallback_block %}
 
     @BeforeEach
     void setUp() {
-        MockitoAnnotations.openMocks(this);
+        {{ ctor_fallback_block | indent(8) }}
     }
+    {% endif %}
 
     {% for method in component.methods %}
     @Test
-    void {{ method.name }}_test() {
+    void {{ method.name }}_test(){% if method.throws_declared %} throws Exception{% endif %} {
         // Arrange
-        {% for arg in method.args %}
-        {{ arg.type }} {{ arg.name }} = null; // TODO: Initialize mock data
-        {% endfor %}
+        {{ method.args_init_block | indent(8) }}
+        {% if method.stubs_block %}
+        {{ method.stubs_block | indent(8) }}
+        {% endif %}
 
-        // Act & Assert
-        // TODO: Implement test logic for {{ method.name }}
-        {{ method.name }}_ai_stub();
+        // Act
+        {% if method.return_type and method.return_type != 'void' %}
+        {{ method.return_type }} result = {{ sut_var }}.{{ method.name }}({{ method.args | map(attribute='name') | join(', ') }});
+        {% else %}
+        {{ sut_var }}.{{ method.name }}({{ method.args | map(attribute='name') | join(', ') }});
+        {% endif %}
+
+        // Assert
+        {% if method.assert_line %}
+        {{ method.assert_line }}
+        {% endif %}
+        {% if method.verify_block %}
+        {{ method.verify_block | indent(8) }}
+        {% endif %}
     }
+
+    {% for extra in method.extra_tests %}
+    {{ extra | indent(4) }}
+
+    {% endfor %}
     {% endfor %}
 }

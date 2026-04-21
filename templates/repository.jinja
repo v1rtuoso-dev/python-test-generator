@@ -3,6 +3,13 @@ package {{ component.package }};
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+{% if use_testcontainers %}
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
+import org.testcontainers.containers.PostgreSQLContainer;
+import org.testcontainers.junit.jupiter.Container;
+import org.testcontainers.junit.jupiter.Testcontainers;
+{% endif %}
 import static org.assertj.core.api.Assertions.assertThat;
 
 // Inferred Imports
@@ -11,22 +18,48 @@ import {{ imp }};
 {% endfor %}
 
 @DataJpaTest
+{% if use_testcontainers %}
+@Testcontainers
+{% endif %}
 class {{ component.name }}Test {
+    {% if use_testcontainers %}
+
+    @Container
+    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:16-alpine");
+
+    @DynamicPropertySource
+    static void datasource(DynamicPropertyRegistry registry) {
+        registry.add("spring.datasource.url", postgres::getJdbcUrl);
+        registry.add("spring.datasource.username", postgres::getUsername);
+        registry.add("spring.datasource.password", postgres::getPassword);
+    }
+    {% endif %}
 
     @Autowired
-    private {{ component.name }} {{ component.name[:1]|lower ~ component.name[1:] }};
+    private {{ component.name }} {{ sut_var }};
 
     {% for method in component.methods %}
     @Test
     void {{ method.name }}_test() {
         // Arrange
-        {% for arg in method.args %}
-        {{ arg.type }} {{ arg.name }} = null; // TODO: Initialize test data
-        {% endfor %}
-        
-        // Act & Assert
-        // TODO: test custom repository logic
-        {{ method.name }}_ai_stub();
+        {{ method.args_init_block | indent(8) }}
+
+        // Act
+        {% if method.return_type and method.return_type != 'void' %}
+        {{ method.return_type }} result = {{ sut_var }}.{{ method.name }}({{ method.args | map(attribute='name') | join(', ') }});
+        {% else %}
+        {{ sut_var }}.{{ method.name }}({{ method.args | map(attribute='name') | join(', ') }});
+        {% endif %}
+
+        // Assert
+        {% if method.assert_line %}
+        {{ method.assert_line }}
+        {% endif %}
     }
+
+    {% for extra in method.extra_tests %}
+    {{ extra | indent(4) }}
+
+    {% endfor %}
     {% endfor %}
 }

@@ -32,13 +32,24 @@ class {{ component.name }}Test {
     @Test
     void {{ method.name }}_test() throws Exception {
         // Arrange
-        {% for arg in method.args %}
-        {{ arg.type }} {{ arg.name }} = null; // TODO: Initialize mock data
-        {% endfor %}
-        
+        {{ method.args_init_block | indent(8) }}
+        {% if method.stubs_block %}
+        {{ method.stubs_block | indent(8) }}
+        {% endif %}
+
         // Act & Assert
-        // TODO: perform mockMvc request and expectations
-        {{ method.name }}_ai_stub();
+        {% if method.http_mapping %}
+        mockMvc.perform({{ method.http_mapping | lower }}("{{ full_path(method) }}")
+                .contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isOk());
+        {% else %}
+        // No @*Mapping detected on this method; add a request here.
+        {% endif %}
     }
+
+    {% for extra in method.extra_tests %}
+    {{ extra | indent(4) }}
+
+    {% endfor %}
     {% endfor %}
 }
